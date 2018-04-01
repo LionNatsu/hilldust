@@ -221,7 +221,7 @@ class ClientCore(object):
         self.route_ipv4 = None
 
     def connect(self, host:str, port:int):
-        self.server_host = host
+        self.server_host = socket.gethostbyname(host)
         self.server_port = port
         self.socket.connect((self.server_host, self.server_port))
 
@@ -239,7 +239,7 @@ class ClientCore(object):
             raise AuthError
 
     def client_info(self):
-        client_ipv4, server_ipv4 = '127.0.0.1', socket.gethostbyname(self.server_host)
+        client_ipv4, server_ipv4 = '127.0.0.1', self.server_host
         m = Message(MessageType.CLNT_INFO)
         m.push_ipv4(Payload.CLT_PUB_IPV4, client_ipv4)
         m.push_ipv4(Payload.SVR_PUB_IPV4, server_ipv4)
