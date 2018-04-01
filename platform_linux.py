@@ -24,8 +24,11 @@ def set_network(c:hillstone.ClientCore):
     subprocess.check_call('ip link set dev '+ifr+' up', shell=True)
     route_table_bak = subprocess.check_output('ip route save table main', shell=True)
     server_gateway = subprocess.check_output('ip route get fibmatch '+c.server_host, shell=True)
-    server_gateway = server_gateway[server_gateway.index(b' via'):]
-    subprocess.check_call('ip route add '+c.server_host+server_gateway.decode('ascii'), shell=True)
+    try:
+        server_gateway = server_gateway[server_gateway.index(b' via'):]
+    except ValueError:
+        server_gateway = server_gateway[server_gateway.index(b' dev'):]
+    subprocess.run('ip route add '+c.server_host+server_gateway.decode('ascii'), check=False, shell=True)
     subprocess.check_call('ip route add '+str(c.gateway_ipv4)+' dev '+ifr, shell=True)
     subprocess.check_call('ip route add '+str(c.ip_ipv4.network)+' via '+str(c.gateway_ipv4), shell=True)
     subprocess.check_call('ip route replace default metric 0 via '+str(c.gateway_ipv4), shell=True)
