@@ -5,7 +5,7 @@ if sys.version_info.major == 2:
     exec('print "This program cannot be run in Python 2."')
     exit(1)
 
-if len(sys.argv) != 3:
+if len(sys.argv) != 4:
     print('Usage:', sys.argv[0], 'ADDRESS:PORT', 'USERNAME', 'PASSWORD')
     exit(2)
 
