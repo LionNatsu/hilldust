@@ -36,7 +36,7 @@ class Client(hillstone.ClientCore):
         raw = scapy.all.raw(scapy.all.IP() / scapy.all.ESP(datagram))
         return self.inbound_sa.decrypt(scapy.all.IP(raw)).payload
 
-    def recv(self) -> scapy.all.IP:
+    def recv(self) -> bytes:
         d, _ = self.udp_socket.recvfrom(8192)
         return bytes(self._decap(d))
 
