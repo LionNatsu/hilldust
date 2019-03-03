@@ -141,7 +141,11 @@ class Payload(enum.Enum):
 
 
 def Unpack(packet:bytes) -> (MessageType, dict, bool):
+    print(len(packet), packet)
     magic, reply, msg_t, size = struct.unpack('!BBHL', packet[:8])
+    print(magic, reply, msg_t, size)
+    if magic == 0x0 and reply == 0 and msg_t == 0 and size == 0:
+        return MessageType.NONE, {}, True
     if magic != 0x22: raise Exception('Not a packet')
     data = packet[8:size]
     unpacked = {}
@@ -150,6 +154,7 @@ def Unpack(packet:bytes) -> (MessageType, dict, bool):
         key, size = struct.unpack('!HH', data[cur:cur+4])
         unpacked[Payload(key)] = data[cur+4:cur+4+size]
         cur += 4+size+((4-(size%4))%4)
+    print(MessageType(msg_t), unpacked, reply == 0x02)
     return MessageType(msg_t), unpacked, reply == 0x02
 
 
@@ -250,6 +255,8 @@ class ClientCore(object):
     def wait_network(self):
         while True:
             msg_id, res, _ = Unpack(self.socket.recv(4096))
+            if msg_id == MessageType.NONE:
+                continue
             if Payload.STATUS in res and res[Payload.STATUS] != b'\0\0\0\0':
                 raise NetworkInfoError
             elif msg_id == MessageType.SET_IP:

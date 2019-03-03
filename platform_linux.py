@@ -23,7 +23,8 @@ def set_network(c:hillstone.ClientCore):
     subprocess.check_call('ip address add dev '+ifr+' '+str(c.ip_ipv4.ip), shell=True)
     subprocess.check_call('ip link set dev '+ifr+' up', shell=True)
     route_table_bak = subprocess.check_output('ip route save table main', shell=True)
-    server_gateway = subprocess.check_output('ip route get fibmatch '+c.server_host, shell=True)
+    #server_gateway = subprocess.check_output('ip route get fibmatch '+c.server_host, shell=True)
+    server_gateway = subprocess.check_output('ip route get '+c.server_host, shell=True)
     try:
         server_gateway = server_gateway[server_gateway.index(b' via'):]
     except ValueError:
