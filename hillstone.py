@@ -164,7 +164,7 @@ class Message(object):
         self.msg_t = msg_t
         self.data = []
     def push_int(self, key, size, v):
-        b = struct.pack('>I', v) # v.to_bytes(size, byteorder='big')
+        b = struct.pack('>I' if size == 4 else '>H', v) # v.to_bytes(size, byteorder='big')
         self.data.append({'key': key, 'bytes': b})
     def push_ipv4(self, key, v):
         b = ipaddress.v4_int_to_packed(int(ipaddress.IPv4Address(v)))
