@@ -140,7 +140,7 @@ class Payload(enum.Enum):
     CLIENT_AUTO_CONNECT = 136
 
 
-def Unpack(packet:bytes) -> (MessageType, dict, bool):
+def Unpack(packet):
     print(len(packet), packet)
     magic, reply, msg_t, size = struct.unpack('!BBHL', packet[:8])
     print(magic, reply, msg_t, size)
@@ -159,31 +159,31 @@ def Unpack(packet:bytes) -> (MessageType, dict, bool):
 
 
 class Message(object):
-    def __init__(self, msg_t:MessageType, reply: bool=False):
+    def __init__(self, msg_t, reply=False):
         self.reply = reply
         self.msg_t = msg_t
         self.data = []
-    def push_int(self, key:Payload, size:int, v:int):
-        b = v.to_bytes(size, byteorder='big')
+    def push_int(self, key, size, v):
+        b = struct.pack('>I', v) # v.to_bytes(size, byteorder='big')
         self.data.append({'key': key, 'bytes': b})
-    def push_ipv4(self, key:Payload, v:any):
+    def push_ipv4(self, key, v):
         b = ipaddress.v4_int_to_packed(int(ipaddress.IPv4Address(v)))
         self.data.append({'key': key, 'bytes': b})
-    def push_string(self, key:Payload, v:str):
+    def push_string(self, key, v):
         self.push_bytes(key, v.encode('utf-8'))
-    def push_bytes(self, key:Payload, v:bytes):
+    def push_bytes(self, key, v):
         self.data.append({'key': key, 'bytes': v})
     def finish(self):
         b_prefix = bytes([0x22, 0x02 if self.reply else 0x00])
-        b_prefix += self.msg_t.value.to_bytes(2, byteorder='big')
+        b_prefix += struct.pack('>H', self.msg_t.value) # .to_bytes(2, byteorder='big')
         b = b''
         for v in self.data:
-            b += v['key'].value.to_bytes(2, byteorder='big')
-            b += len(v['bytes']).to_bytes(2, byteorder='big')
+            b += struct.pack('>H', v['key'].value) # .to_bytes(2, byteorder='big')
+            b += struct.pack('>H', len(v['bytes'])) # .to_bytes(2, byteorder='big')
             b += v['bytes']
             padding = (4-(len(b)%4)) % 4 # padding for alignment
             b = b.ljust(len(b)+padding, b'\0')
-        size = (len(b)+8).to_bytes(4, byteorder='big')
+        size = struct.pack('>I', (len(b)+8)) # .to_bytes(4, byteorder='big')
         return b_prefix + size + b
 
 
@@ -199,7 +199,7 @@ class IPSecParameters(object):
         for _ in range(9):
             self.enlarged_keymat += sha1(self.enlarged_keymat).digest()
         
-        def read_bytes(buf:bytes, size:int) -> (bytes, bytes):
+        def read_bytes(buf, size):
             return buf[:size], buf[size:]
         buf = self.enlarged_keymat
         self.out_auth_key, buf = read_bytes(buf, auth_size)
@@ -224,12 +224,12 @@ class ClientCore(object):
         self.wins_ipv4 = None
         self.route_ipv4 = None
 
-    def connect(self, host:str, port:int):
+    def connect(self, host, port):
         self.server_host = socket.gethostbyname(host)
         self.server_port = port
         self.socket.connect((self.server_host, self.server_port))
 
-    def auth(self, username:str, password:str, host_id:str, host_name:str):
+    def auth(self, username, password, host_id, host_name):
         m = Message(MessageType.AUTH)
         m.push_int(Payload.AUTH_TYPE, 2, 1) # Username + Password
         m.push_string(Payload.USERNAME, username)
@@ -298,7 +298,7 @@ class ClientCore(object):
         m.push_int(Payload.DISCONNECT, 2, 0)
         self.socket.send(m.finish())
 
-def auth_err_msg(errcode:int)->str:
+def auth_err_msg(errcode):
     cases = {
         1: 'wrong_username_password',
         3: 'wrong_username_password',

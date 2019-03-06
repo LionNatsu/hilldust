@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import sys
-if sys.version_info.major == 2:
-    exec('print "This program cannot be run in Python 2."')
-    exit(1)
+#if sys.version_info.major == 2:
+#    exec('print "This program cannot be run in Python 2."')
+#    exit(1)
 
 if len(sys.argv) != 4:
     print('Usage:', sys.argv[0], 'ADDRESS:PORT', 'USERNAME', 'PASSWORD')
