@@ -41,14 +41,17 @@ def set_network(c):
     subprocess.call('ip route add '+c.server_host+server_gateway.decode('ascii'), shell=True)
     subprocess.check_call('ip route add '+str(c.gateway_ipv4)+' dev '+ifr, shell=True)
     subprocess.check_call('ip route add '+str(c.ip_ipv4.network)+' via '+str(c.gateway_ipv4), shell=True)
-    subprocess.check_call('ip route replace default metric 0 via '+str(c.gateway_ipv4), shell=True)
-    
+    subprocess.check_call('ip route add 10.129.0.0/16 via '+str(c.gateway_ipv4), shell=True)
+    subprocess.check_call('ip route add 172.31.0.0/16 via '+str(c.gateway_ipv4), shell=True)
+    subprocess.check_call('ip route add 172.32.0.0/16 via '+str(c.gateway_ipv4), shell=True)
+    # subprocess.check_call('ip route replace default metric 0 via '+str(c.gateway_ipv4), shell=True)
+
     with open('/etc/resolv.conf', 'rb') as f:
         nameserver_bak = f.read()
     
-    with open('/etc/resolv.conf', 'wb') as f:
-        buf = 'nameserver ' + str(c.dns_ipv4) + '\n'
-        f.write(buf.encode('ascii'))
+    # with open('/etc/resolv.conf', 'wb') as f:
+    #     buf = 'nameserver ' + str(c.dns_ipv4) + '\n'
+    #     f.write(buf.encode('ascii'))
     
 def restore_network(c):
     from tempfile import NamedTemporaryFile
@@ -57,8 +60,8 @@ def restore_network(c):
         f.flush()
         subprocess.check_call('ip route flush table main', shell=True)
         subprocess.check_call('ip route restore < '+f.name, shell=True, stderr=DEVNULL)
-    with open('/etc/resolv.conf', 'wb') as f:
-        f.write(nameserver_bak)
+    # with open('/etc/resolv.conf', 'wb') as f:
+    #     f.write(nameserver_bak)
 
 def write(datagram):
     os.write(tun.fileno(), datagram)
