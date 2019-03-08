@@ -17,19 +17,23 @@ tun = None
 def set_network(c):
     global tun, route_table_bak, nameserver_bak
     TUNSETIFF = 0x800454ca # 0x400454ca
+    TUNSETIFF_ROUTER = 0x400454ca
     IFF_TUN = 0x0001
     IFF_NO_PI = 0x1000
 
     tun = open('/dev/net/tun', 'r+b', buffering=0)
     ifr = struct.pack('16sH', b'', IFF_TUN | IFF_NO_PI)
-    ifr = fcntl.ioctl(tun, TUNSETIFF, ifr)
+    try:
+        ifr = fcntl.ioctl(tun, TUNSETIFF, ifr)
+    except IOError:
+        ifr = fcntl.ioctl(tun, TUNSETIFF_ROUTER, ifr)
     ifr = ifr[:ifr.index(b'\0')].decode('ascii')
 
     subprocess.check_call('ip address add dev '+ifr+' '+str(c.ip_ipv4.ip), shell=True)
     subprocess.check_call('ip link set dev '+ifr+' up', shell=True)
     route_table_bak = subprocess.check_output('ip route save table main', shell=True)
     #server_gateway = subprocess.check_output('ip route get fibmatch '+c.server_host, shell=True)
-    server_gateway = subprocess.check_output('ip route get '+c.server_host, shell=True).split('\n')[0]
+    server_gateway = subprocess.check_output('ip route get '+c.server_host, shell=True).split(b'\n')[0]
     try:
         server_gateway = server_gateway[server_gateway.index(b' via'):]
     except ValueError:
