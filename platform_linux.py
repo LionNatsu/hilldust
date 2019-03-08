@@ -16,7 +16,7 @@ tun = None
 
 def set_network(c):
     global tun, route_table_bak, nameserver_bak
-    TUNSETIFF = 0x400454ca
+    TUNSETIFF = 0x800454ca # 0x400454ca
     IFF_TUN = 0x0001
     IFF_NO_PI = 0x1000
 
@@ -29,7 +29,7 @@ def set_network(c):
     subprocess.check_call('ip link set dev '+ifr+' up', shell=True)
     route_table_bak = subprocess.check_output('ip route save table main', shell=True)
     #server_gateway = subprocess.check_output('ip route get fibmatch '+c.server_host, shell=True)
-    server_gateway = subprocess.check_output('ip route get '+c.server_host, shell=True)
+    server_gateway = subprocess.check_output('ip route get '+c.server_host, shell=True).split('\n')[0]
     try:
         server_gateway = server_gateway[server_gateway.index(b' via'):]
     except ValueError:
