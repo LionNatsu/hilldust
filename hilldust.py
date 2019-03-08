@@ -45,8 +45,16 @@ def outbound_handle():
         c.send(raw)
 
 from threading import Thread
-Thread(target=inbound_handle, daemon=True).start()
-Thread(target=outbound_handle, daemon=True).start()
+
+inBoundThread = Thread(target=inbound_handle)
+inBoundThread.daemon = True
+inBoundThread.start()
+outBoundThread = Thread(target=outbound_handle)
+outBoundThread.daemon=True
+outBoundThread.start()
+
+if sys.version_info < (3, 0):
+    input = raw_input
 
 try:
     input('Enter to exit.')

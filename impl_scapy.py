@@ -10,7 +10,7 @@ class Client(hillstone.ClientCore):
         self.udp_socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 
     def new_key(self):
-        super().new_key()
+        super(Client, self).new_key()
         self.outbound_sa = scapy.all.SecurityAssociation(
             proto=scapy.all.ESP,
             spi=self.ipsec_param.out_spi,
@@ -41,5 +41,6 @@ class Client(hillstone.ClientCore):
         return bytes(self._decap(d))
 
     def send(self, datagram):
+        print(datagram, self.server_host, self.server_udp_port)
         return self.udp_socket.sendto(bytes(self._encap(datagram)), (self.server_host, self.server_udp_port))
 

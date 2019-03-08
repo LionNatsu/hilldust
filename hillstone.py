@@ -3,6 +3,7 @@ import ipaddress
 import socket
 import ssl
 import struct
+import sys
 
 class AuthError(Exception):
     def __init__(self):
@@ -154,7 +155,6 @@ def Unpack(packet):
         key, size = struct.unpack('!HH', data[cur:cur+4])
         unpacked[Payload(key)] = data[cur+4:cur+4+size]
         cur += 4+size+((4-(size%4))%4)
-    print(MessageType(msg_t), unpacked, reply == 0x02)
     return MessageType(msg_t), unpacked, reply == 0x02
 
 
@@ -167,6 +167,8 @@ class Message(object):
         b = struct.pack('>I' if size == 4 else '>H', v) # v.to_bytes(size, byteorder='big')
         self.data.append({'key': key, 'bytes': b})
     def push_ipv4(self, key, v):
+        if sys.version_info < (3, 0):
+            v = unicode(v, "utf-8")
         b = ipaddress.v4_int_to_packed(int(ipaddress.IPv4Address(v)))
         self.data.append({'key': key, 'bytes': b})
     def push_string(self, key, v):
@@ -174,7 +176,7 @@ class Message(object):
     def push_bytes(self, key, v):
         self.data.append({'key': key, 'bytes': v})
     def finish(self):
-        b_prefix = bytes([0x22, 0x02 if self.reply else 0x00])
+        b_prefix = struct.pack('bb', 0x22, 0x02 if self.reply else 0x00)
         b_prefix += struct.pack('>H', self.msg_t.value) # .to_bytes(2, byteorder='big')
         b = b''
         for v in self.data:
@@ -184,7 +186,8 @@ class Message(object):
             padding = (4-(len(b)%4)) % 4 # padding for alignment
             b = b.ljust(len(b)+padding, b'\0')
         size = struct.pack('>I', (len(b)+8)) # .to_bytes(4, byteorder='big')
-        return b_prefix + size + b
+        full_msg = b_prefix + size + b
+        return full_msg
 
 
 class IPSecParameters(object):
@@ -261,7 +264,7 @@ class ClientCore(object):
                 raise NetworkInfoError
             elif msg_id == MessageType.SET_IP:
                 network = ipaddress.IPv4Network((0, str(ipaddress.IPv4Address(res[Payload.NETMASK_IPV4]))))
-                self.server_udp_port = int.from_bytes(res[Payload.SVR_UDP_PORT], byteorder='big')
+                self.server_udp_port, = struct.unpack('<H', res[Payload.SVR_UDP_PORT]) # int.from_bytes(res[Payload.SVR_UDP_PORT], byteorder='big')
                 self.ip_ipv4 = ipaddress.IPv4Interface((res[Payload.CLT_PRIV_IPV4], network.prefixlen))
                 self.gateway_ipv4 = ipaddress.IPv4Address(res[Payload.SVR_PRIV_IPV4])
                 self.dns_ipv4 = ipaddress.IPv4Address(res[Payload.DNS_IPV4])
@@ -275,8 +278,8 @@ class ClientCore(object):
         from os import urandom
         key_material_size = 0x30
         key_material = urandom(key_material_size)
-        inbound_spi = int.from_bytes(urandom(4), byteorder='big')
-        inbound_cpi = int.from_bytes(urandom(2), byteorder='big')
+        inbound_spi, = struct.unpack('<I', urandom(4)) # int.from_bytes(urandom(4), byteorder='big')
+        inbound_cpi, = struct.unpack('<H', urandom(2)) # int.from_bytes(urandom(2), byteorder='big')
         m = Message(MessageType.NEW_KEY)
         m.push_int(Payload.KEY_EXCH_MODE, 2, KeyExchangeMode.KEY_EXCH_PLAIN.value)
         m.push_bytes(Payload.KEYMAT, key_material)
@@ -288,7 +291,7 @@ class ClientCore(object):
             raise NewKeyError
         if res[Payload.ENC_ALG] != b'\0\x03' or res[Payload.AUTH_ALG] != b'\0\x02' or res[Payload.IPCOMP_ALG] != b'\0\0':
             raise NotSupported
-        outbound_spi = int.from_bytes(res[Payload.SPI], byteorder='big')
+        outbound_spi, = struct.unpack('<I', res[Payload.SPI]) # int.from_bytes(res[Payload.SPI], byteorder='big')
         # outbound_cpi = int.from_bytes(res[Payload.IPCOMP_CPI], byteorder='big')
         self.ipsec_param = IPSecParameters(inbound_spi, outbound_spi, key_material, auth_size=0x14, crypt_size=0x18, iv_size=8)
         self.session_id = res[Payload.SESSION_ID]
