@@ -38,10 +38,10 @@ class Client(hillstone.ClientCore):
 
     def recv(self):
         d, _ = self.udp_socket.recvfrom(8192)
-        print('<<', d)
+        # print('<<', d)
         return bytes(self._decap(d))
 
     def send(self, datagram):
-        print('>>', datagram, self.server_host, self.server_udp_port)
+        # print('>>', datagram, self.server_host, self.server_udp_port)
         return self.udp_socket.sendto(bytes(self._encap(datagram)), (self.server_host, self.server_udp_port))
 
