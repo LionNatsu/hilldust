@@ -262,9 +262,9 @@ class ClientCore(object):
             if Payload.STATUS in res and res[Payload.STATUS] != b'\0\0\0\0':
                 raise NetworkInfoError
             elif msg_id == MessageType.SET_IP:
-                network = ipaddress.IPv4Network((0, str(ipaddress.IPv4Address(res[Payload.NETMASK_IPV4]))))
+                network = ipaddress.IPv4Network(str(ipaddress.IPv4Address(res[Payload.NETMASK_IPV4])))
                 self.server_udp_port, = struct.unpack('>H', res[Payload.SVR_UDP_PORT]) # int.from_bytes(res[Payload.SVR_UDP_PORT], byteorder='big')
-                self.ip_ipv4 = ipaddress.IPv4Interface((res[Payload.CLT_PRIV_IPV4], network.prefixlen))
+                self.ip_ipv4 = ipaddress.IPv4Interface(res[Payload.CLT_PRIV_IPV4])
                 self.gateway_ipv4 = ipaddress.IPv4Address(res[Payload.SVR_PRIV_IPV4])
                 self.dns_ipv4 = ipaddress.IPv4Address(res[Payload.DNS_IPV4])
                 self.wins_ipv4 = res[Payload.WINS_IPV4]
