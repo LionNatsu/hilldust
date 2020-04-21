@@ -142,7 +142,7 @@ class Payload(enum.Enum):
 
 def Unpack(packet:bytes) -> (MessageType, dict, bool):
     magic, reply, msg_t, size = struct.unpack('!BBHL', packet[:8])
-    if magic != 0x22: raise Exception('Not a packet')
+    #if magic != 0x22: raise Exception('Not a packet')
     data = packet[8:size]
     unpacked = {}
     cur = 0
@@ -247,6 +247,13 @@ class ClientCore(object):
         if res[Payload.STATUS] != b'\0\0\0\0':
             raise ClientInfoError
 
+    def Int2IP(self,ipnum):
+        o1 = int(ipnum / 16777216) % 256
+        o2 = int(ipnum / 65536) % 256
+        o3 = int(ipnum / 256) % 256
+        o4 = int(ipnum) % 256
+        return '%(o1)s.%(o2)s.%(o3)s.%(o4)s' % locals()
+
     def wait_network(self):
         while True:
             msg_id, res, _ = Unpack(self.socket.recv(4096))
@@ -257,12 +264,14 @@ class ClientCore(object):
                 self.server_udp_port = int.from_bytes(res[Payload.SVR_UDP_PORT], byteorder='big')
                 self.ip_ipv4 = ipaddress.IPv4Interface((res[Payload.CLT_PRIV_IPV4], network.prefixlen))
                 self.gateway_ipv4 = ipaddress.IPv4Address(res[Payload.SVR_PRIV_IPV4])
-                self.dns_ipv4 = ipaddress.IPv4Address(res[Payload.DNS_IPV4])
+                self.dns_ipv4 = ipaddress.IPv4Address(self.Int2IP(int.from_bytes(res[Payload.DNS_IPV4],'big')))
                 self.wins_ipv4 = res[Payload.WINS_IPV4]
             elif msg_id == MessageType.SET_ROUTE:
                 self.route_ipv4 = res[Payload.ROUTE_IPV4]
             elif msg_id == MessageType.KEY_DONE:
                 break
+            elif msg_id == MessageType.NONE:
+                continue
 
     def new_key(self):
         from os import urandom
