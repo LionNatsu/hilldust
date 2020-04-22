@@ -211,13 +211,13 @@ class ClientCore(object):
         self.client_ver = '1.0.0'
         self.server_host = ''
         self.server_port = -1
-        
+
         self.ipsec_param = None
         self.session_id = -1
         self.server_udp_port = -1
         self.ip_ipv4 = None
         self.gateway_ipv4 = None
-        self.dns_ipv4 = None
+        self.dns_ipv4 = []
         self.wins_ipv4 = None
         self.route_ipv4 = None
 
@@ -261,7 +261,9 @@ class ClientCore(object):
                 self.server_udp_port = int.from_bytes(res[Payload.SVR_UDP_PORT], byteorder='big')
                 self.ip_ipv4 = ipaddress.IPv4Interface((res[Payload.CLT_PRIV_IPV4], network.prefixlen))
                 self.gateway_ipv4 = ipaddress.IPv4Address(res[Payload.SVR_PRIV_IPV4])
-                self.dns_ipv4 = ipaddress.IPv4Address(res[Payload.DNS_IPV4][:4])
+                self.dns_ipv4 = []
+                for i in range(0, len(res[Payload.DNS_IPV4]), 4):
+                    self.dns_ipv4.append(ipaddress.IPv4Address(res[Payload.DNS_IPV4][i:i+4]))
                 self.wins_ipv4 = res[Payload.WINS_IPV4]
             elif msg_id == MessageType.SET_ROUTE:
                 self.route_ipv4 = res[Payload.ROUTE_IPV4]

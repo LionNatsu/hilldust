@@ -37,7 +37,9 @@ def set_network(c:hillstone.ClientCore):
         nameserver_bak = f.read()
     
     with open('/etc/resolv.conf', 'wb') as f:
-        buf = 'nameserver ' + str(c.dns_ipv4) + '\n'
+        buf = ''
+        for dns in c.dns_ipv4:
+            buf += 'nameserver ' + str(dns) + '\n'
         f.write(buf.encode('ascii'))
     
 def restore_network(c:hillstone.ClientCore):
