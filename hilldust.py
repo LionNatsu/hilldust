@@ -53,7 +53,11 @@ try:
 except KeyboardInterrupt:
     pass
 
-print('Logout.')
 c.logout()
-platform_linux.restore_network(c)
-print('Network restored.')
+print('Logout.')
+
+# [Error]
+# - subprocess.CalledProcessError: Command 'ip route restore < /tmp/tmprt392la1' returned non-zero exit status 2
+# Can't run this after that error
+# platform_linux.restore_network(c)
+# print('Network restored.')
