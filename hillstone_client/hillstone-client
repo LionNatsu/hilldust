@@ -18,7 +18,7 @@ target = sys.argv[1]
 delim_index = target.rindex(':')
 host, port = target[:delim_index], target[delim_index+1:]
 
-import impl_scapy
+from hillstone_client import impl_scapy
 c = impl_scapy.Client()
 c.connect(host, int(port))
 print('Connected.')
@@ -30,7 +30,7 @@ print('Got network configuration.')
 c.new_key()
 print('Key exchanging completed.')
 
-import platform_linux
+from hillstone_client import platform_linux
 platform_linux.set_network(c)
 print('Network configured.')
 

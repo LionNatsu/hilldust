@@ -1,4 +1,4 @@
-import hillstone
+from . import hillstone
 import scapy.all
 
 class Client(hillstone.ClientCore):

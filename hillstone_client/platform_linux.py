@@ -1,4 +1,4 @@
-import hillstone
+from . import hillstone
 
 import os
 import fcntl
