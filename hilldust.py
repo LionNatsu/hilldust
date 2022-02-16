@@ -48,8 +48,12 @@ from threading import Thread
 Thread(target=inbound_handle, daemon=True).start()
 Thread(target=outbound_handle, daemon=True).start()
 
+print('Press Ctrl+C to exit.')
 try:
-    input('Enter to exit.')
+    while True:
+        time.sleep(120)
+        subprocess.call('nslookup '+str(c.gateway_ipv4)+' '+str(c.dns_ipv4[0]), shell=True,
+                stdout=subprocess.DEVNULL)
 except KeyboardInterrupt:
     pass
 
